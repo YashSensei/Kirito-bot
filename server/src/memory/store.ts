@@ -92,11 +92,11 @@ function fromIntelligence(
 }
 
 /**
- * A person's memory: CopilotKit Intelligence when this deployment is entitled to it, OpenBot's own
+ * A person's memory: CopilotKit Intelligence when this deployment is entitled to it, Kirito-bot's own
  * tables when it is not.
  *
  * When Intelligence memory is available, it holds the content and does the recall, and every memory
- * the person has accepted is mirrored there. The OpenBot row stays as the record of what Intelligence
+ * the person has accepted is mirrored there. The Kirito-bot row stays as the record of what Intelligence
  * has no field for: where a memory came from, whether it is reviewed or paused, which Bot formed it
  * and which source it was imported from. Those decide which Bot may see a memory, so every rule a
  * Bot's recall obeys is still applied here, over the rows, before anything Intelligence returns
@@ -266,7 +266,7 @@ export function createMemoryStore(
     return new Set(rows.map((row) => row.intelligenceMemoryId as string));
   }
 
-  /** The person's Intelligence memories that no OpenBot row describes. */
+  /** The person's Intelligence memories that no Kirito-bot row describes. */
   async function intelligenceOnly(
     ownerUserId: string,
     memories: IntelligenceMemoryRecord[],
@@ -628,7 +628,7 @@ export function createMemoryStore(
         )
         .limit(1);
       if (!source) throw new MemoryNotFoundError();
-      // Removing a source is turning that app down for this Bot: OpenBot never adds it back.
+      // Removing a source is turning that app down for this Bot: Kirito-bot never adds it back.
       await database.transaction(async (transaction) => {
         await lockDefaults(transaction, ownerUserId, source.agentId);
         const [row] = await transaction

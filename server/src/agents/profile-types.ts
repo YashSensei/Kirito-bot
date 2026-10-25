@@ -23,6 +23,7 @@ export type AgentProfile = {
   endpoint: string | null;
   /** Whether a key is set for it. Never the key. */
   hasAuth: boolean;
+  builtIn?: boolean;
   /**
    * Whether this agent holds a credential for calling tools back.
    *
@@ -42,6 +43,7 @@ export type CreateAgentInput = Pick<
    * This field is the AG-UI endpoint for a customer-provided agent. Without it the Bot runs on the
    * built-in endpoint.
    */
+  avatarSeed?: string;
   endpoint?: string;
   /**
    * A key this agent sits behind, if any.

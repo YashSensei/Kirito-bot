@@ -95,7 +95,7 @@ function CredentialsPage() {
           Add credential
         </Button>
       }
-      description="Keys and tokens for this deployment. OpenBot never shows a secret after it is saved."
+      description="Keys and tokens for this deployment. Kirito-bot never shows a secret after it is saved."
       title="Credentials"
     >
       {/*

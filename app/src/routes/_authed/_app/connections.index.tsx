@@ -1,3 +1,4 @@
+import { ConnectorDirectory } from "@/components/plugins/connector-directory";
 import {
   IconBrandGoogleDrive,
   IconBrandNotion,
@@ -59,7 +60,7 @@ export const Route = createFileRoute("/_authed/_app/connections/")({
   /*
    * `?connected=` is how the OAuth callback reports back, carrying a server key on success and
    * `failed` otherwise. `?linked=` is the same for the GitHub account-link callback: `github` on
-   * success, `github-taken` when that GitHub account belongs to another OpenBot user, `failed`
+   * success, `github-taken` when that GitHub account belongs to another Kirito-bot user, `failed`
    * otherwise (see linked-notice.ts). Each is the only channel available: the callback is a
    * redirect from another company's server, so there is no response body to read.
    *
@@ -129,7 +130,7 @@ export const AUTHORIZATION_NOTICES: ReadonlyMap<string, string> = new Map([
   ],
   [
     "vendor-unavailable",
-    "The app didn't answer when OpenBot tried to finish that authorization, so nothing was recorded. Try the link again in a moment.",
+    "The app didn't answer when Kirito-bot tried to finish that authorization, so nothing was recorded. Try the link again in a moment.",
   ],
   [
     "not-your-authorization",
@@ -361,7 +362,7 @@ function RouteComponent() {
     providers.isPending;
 
   return (
-    <PageShell className="@container" title="Connections">
+    <PageShell className="@container" title="Connectors">
       {/*
        * For `?connected=` only the failure is worth saying. A success needs no sentence: the row it
        * came back to now reads "Connected", which is the same news told by the thing it is news
@@ -393,9 +394,10 @@ function RouteComponent() {
           {arrival.authorizationNotice}
         </p>
       ) : null}
+      <ConnectorDirectory />
       <PageSection
         description="The apps and accounts your Bots use as you. Open one to connect it or change it."
-        title="Your connections"
+        title="Connected accounts"
       >
         {/*
          * BOTH APP READS DECIDE THIS. A `/api/plugins` that succeeded beside a
@@ -410,8 +412,7 @@ function RouteComponent() {
           </p>
         ) : rows.length === 0 ? (
           <PageEmpty>
-            Nothing to connect yet. Apps show up here once an admin turns them
-            on.
+            Choose an app above to connect your account.
           </PageEmpty>
         ) : (
           <>
@@ -423,8 +424,8 @@ function RouteComponent() {
                 <IconSearch aria-hidden="true" className="size-4" />
               </InputGroupAddon>
               <InputGroupInput
-                aria-label="Search connections"
-                placeholder="Search connections"
+                aria-label="Search connected accounts"
+                placeholder="Search connected accounts"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />

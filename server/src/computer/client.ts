@@ -128,6 +128,7 @@ export class HandoffRequestError extends Error {
  * use this interface directly.
  */
 export type ComputerTransportOptions = {
+  headersFor?: (url: string) => Record<string, string>;
   token?: string;
   allowPrivateHosts?: boolean;
   timeoutMs?: number;
@@ -207,7 +208,9 @@ export function createComputerTransport(
     try {
       response = await doFetch(`${target}${path}`, {
         ...init,
+        ...(options.headersFor ? { redirect: "error" as const } : {}),
         headers: {
+          ...options.headersFor?.(baseUrl),
           ...(init?.headers as Record<string, string> | undefined),
           "x-openbot-bot-id": botId,
           ...(options.token

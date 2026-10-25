@@ -328,7 +328,7 @@ function RouteComponent() {
           : null;
       if (authorizationUrl === null) {
         setError(
-          "OpenBot got no consent link back, so nothing was connected. Try again, or check this connector's setup if it keeps happening.",
+          "Kirito-bot got no consent link back, so nothing was connected. Try again, or check this connector's setup if it keeps happening.",
         );
         return;
       }
@@ -897,7 +897,7 @@ function RouteComponent() {
                           </span>
                         </>
                       ) : (
-                        /* The arrow says this leaves OpenBot for the vendor's consent page. It does. */
+                        /* The arrow says this leaves Kirito-bot for the vendor's consent page. It does. */
                         <Button
                           disabled={connectSelf.isPending}
                           onClick={() => {
@@ -987,7 +987,7 @@ function RouteComponent() {
                 <p className="text-muted-foreground text-sm">
                   Add this to the client's authorised redirect URIs at the
                   vendor, exactly as written. One wrong character fails there,
-                  with an error that doesn't mention OpenBot.
+                  with an error that doesn't mention Kirito-bot.
                 </p>
               )}
               {!plugins.data?.redirectUri ? (

@@ -27,7 +27,7 @@ function SetupHelp() {
   // Whitelabel builds can choose their own support page. Never prefill it with error data.
   const url =
     import.meta.env.VITE_OPENBOT_SUPPORT_URL?.trim() ||
-    "https://github.com/CopilotKit/OpenBot/issues/new/choose";
+    "https://github.com/CopilotKit/Kirito-bot/issues/new/choose";
   return (
     <ExternalLink className="setup-help" href={url}>
       Get setup help

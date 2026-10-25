@@ -8,6 +8,7 @@ import {
 } from "./queries";
 
 export type AgentInput = {
+  avatarSeed?: string;
   name: string;
   title: string;
   roleDescription: string;

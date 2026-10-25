@@ -44,7 +44,10 @@ export function browserRuntimeFromEnv(
     backend,
     channel: local ? "chrome" : "chromium",
     mode,
-    useVirtualDisplay: platform === "linux" && mode === "headed",
+    useVirtualDisplay:
+      platform === "linux" &&
+      mode === "headed" &&
+      !env.COMPUTER_DESKTOP_DISPLAY,
     ...(local ? { hostname: "127.0.0.1" as const } : {}),
     allowExec: !local,
   };

@@ -28,6 +28,7 @@ type AgentInputParseResult =
   | { ok: false; error: string };
 
 type AgentInputObject = {
+  avatarSeed?: unknown;
   name?: unknown;
   title?: unknown;
   roleDescription?: unknown;
@@ -124,9 +125,27 @@ export function parseAgentInput(
     }
   }
 
+  if (
+    input.avatarSeed !== undefined &&
+    (typeof input.avatarSeed !== "string" ||
+      !/^miles:(blob|cloud|square|sparkle|clover|heart|flower|teardrop|tablet|wedge|house|star|hex):(black|brown|red|orange|yellow|green|cyan|blue|violet|magenta|gray)$/.test(
+        input.avatarSeed,
+      ))
+  )
+    return { ok: false, error: "Choose a valid character and color." };
   return {
     ok: true,
-    value: { name, title, roleDescription, visibility, endpoint, auth },
+    value: {
+      name,
+      title,
+      roleDescription,
+      visibility,
+      endpoint,
+      auth,
+      ...(typeof input.avatarSeed === "string"
+        ? { avatarSeed: input.avatarSeed }
+        : {}),
+    },
   };
 }
 
@@ -234,7 +253,7 @@ export function parseConnectionHeaders(
  * The audit table has a foreign key to that table, so writing this id would fail the constraint and
  * lose the row entirely. Who it was is in the payload either way.
  */
-const DEV_ACTOR_EMAIL = "dev@openbot.local";
+const DEV_ACTOR_ID = "dev-local-user";
 
 export function createAgentRoutes(
   store: AgentProfileStore,
@@ -309,13 +328,15 @@ export function createAgentRoutes(
    * the picked harness answering 401 to everything.
    */
   managedRun?: { token: string; endpoints: readonly (string | URL)[] },
+  onManagedCreated?: (agent: AgentProfile, actor: AgentActor) => Promise<void>,
 ) {
   /** The dto with the one fact only this closure knows: whether the coworker runs on our own Bot. */
   const dto = (actor: AgentActor, agent: AgentProfile) => ({
     ...agentDto(actor, agent),
-    // A string comparison on purpose: two absent values must not read as "runs on our Bot".
     builtIn:
-      typeof agent.endpoint === "string" && agent.endpoint === managedEndpoint,
+      agent.builtIn === true ||
+      (typeof agent.endpoint === "string" &&
+        agent.endpoint === managedEndpoint),
   });
   const routes = new Hono<{ Variables: AppVariables }>();
 
@@ -362,7 +383,7 @@ export function createAgentRoutes(
         eventType: "bot.declined",
         targetType: "agent",
         targetId: agentId,
-        ...(actor?.id && actor.email !== DEV_ACTOR_EMAIL
+        ...(actor?.id && actor.id !== DEV_ACTOR_ID
           ? { actorUserId: actor.id }
           : {}),
         payload: {
@@ -494,7 +515,7 @@ export function createAgentRoutes(
         eventType,
         targetType: "agent",
         targetId: agentId,
-        ...(actor?.id && actor.email !== DEV_ACTOR_EMAIL
+        ...(actor?.id && actor.id !== DEV_ACTOR_ID
           ? { actorUserId: actor.id }
           : {}),
         payload: { bot: agentId, actor: actor?.email ?? "unknown", ...payload },
@@ -552,7 +573,53 @@ export function createAgentRoutes(
         ...(parsed.value.endpoint ? { endpoint: parsed.value.endpoint } : {}),
         hasKey: Boolean(parsed.value.auth),
       });
+      if (
+        (agent.builtIn || agent.endpoint === managedEndpoint) &&
+        onManagedCreated
+      ) {
+        try {
+          await onManagedCreated(agent, context.var.actor);
+        } catch {
+          console.warn(
+            "New bot created; research tool setup must be retried in Capabilities.",
+          );
+        }
+      }
       return context.json({ agent: dto(context.var.actor, agent) }, 201);
+    } catch (error) {
+      return mapStoreError(context, error);
+    }
+  });
+
+  routes.patch("/:agentId/identity", requireUser, async (context) => {
+    const body = await context.req.json().catch(() => null);
+    if (
+      !body ||
+      typeof body.name !== "string" ||
+      !body.name.trim() ||
+      body.name.trim().length > 80 ||
+      typeof body.avatarSeed !== "string" ||
+      !/^miles:(blob|cloud|square|sparkle|clover|heart|flower|teardrop|tablet|wedge|house|star|hex):(black|brown|red|orange|yellow|green|cyan|blue|violet|magenta|gray)$/.test(
+        body.avatarSeed,
+      )
+    )
+      return context.json(
+        { error: "Choose a name, character and color." },
+        400,
+      );
+    if (!store.updateIdentity)
+      return context.json({ error: "Appearance editing is unavailable." }, 503);
+    try {
+      const agent = await store.updateIdentity(
+        context.var.actor,
+        context.req.param("agentId"),
+        { name: body.name.trim(), avatarSeed: body.avatarSeed },
+      );
+      await record(context, "bot.updated", agent.id, {
+        name: agent.name,
+        appearanceChanged: true,
+      });
+      return context.json({ agent: dto(context.var.actor, agent) });
     } catch (error) {
       return mapStoreError(context, error);
     }
@@ -629,6 +696,18 @@ export function createAgentRoutes(
       await record(context, "bot.duplicated", agent.id, {
         copiedFrom: context.req.param("agentId"),
       });
+      if (
+        (agent.builtIn || agent.endpoint === managedEndpoint) &&
+        onManagedCreated
+      ) {
+        try {
+          await onManagedCreated(agent, context.var.actor);
+        } catch {
+          console.warn(
+            "New bot created; research tool setup must be retried in Capabilities.",
+          );
+        }
+      }
       return context.json({ agent: dto(context.var.actor, agent) }, 201);
     } catch (error) {
       return mapStoreError(context, error);
@@ -822,6 +901,9 @@ function agentDto(actor: AgentActor, agent: AgentProfile) {
     // Whether one exists, never what it is.
     hasCallbackToken: agent.hasCallbackToken,
     canManage: canManageAgent(actor, agent),
+    canCustomize:
+      canManageAgent(actor, agent) ||
+      (agent.systemOwned && actor.role === "admin"),
     // Ownership, kept separate from permission. `canManage` is also true for an administrator on
     // another user's coworker, so a roster that split "mine" on it would file other people's work
     // under yours, and only for administrators, who are the least likely to notice.

@@ -37,6 +37,11 @@ type DatabaseExecutor = Pick<Database, "select"> | Pick<Transaction, "select">;
 export type ProfileReadExecutor = DatabaseExecutor;
 
 export type AgentProfileStore = {
+  updateIdentity?(
+    actor: AgentActor,
+    id: string,
+    input: { name: string; avatarSeed: string },
+  ): Promise<AgentProfile>;
   list(actor: AgentActor, hidden?: boolean): Promise<AgentProfile[]>;
   get(actor: AgentActor, id: string): Promise<AgentProfile | null>;
   /**
@@ -121,7 +126,9 @@ export class ProtectedAgentError extends Error {
 
 export class ManagedAgentUnavailableError extends Error {
   constructor() {
-    super("OpenBot has no managed Bot. Give this Bot its own AG-UI endpoint.");
+    super(
+      "Kirito-bot has no managed Bot. Give this Bot its own AG-UI endpoint.",
+    );
     this.name = "ManagedAgentUnavailableError";
   }
 }
@@ -193,6 +200,7 @@ function mapProfile(
     assignedToMe: Boolean(row.assignedToMe),
     deletedAt: row.deletedAt,
     endpoint: endpointOf(row.configuration),
+    builtIn: Boolean(systemPromptOf(row.configuration)),
     // Whether a key is set, never which. The form needs to show "a key is set" so a person does not
     // wipe one by saving an unrelated edit; showing the value would put a secret in a screenshot.
     hasAuth: authFromConfiguration(row.configuration) !== null,
@@ -413,6 +421,30 @@ export function createAgentProfileStore(
     : undefined;
 
   return {
+    async updateIdentity(actor, id, input) {
+      return database.transaction(async (transaction) => {
+        await lockProfileMutationRows(transaction, id);
+        const profile = await findAccessibleProfile(transaction, actor, id);
+        if (!profile) throw new AgentNotFoundError(id);
+        if (
+          !(
+            canManageAgent(actor, profile) ||
+            (profile.systemOwned && actor.role === "admin")
+          )
+        )
+          throw new AgentNotManageableError(id);
+        const updatedAt = new Date();
+        await transaction
+          .update(agents)
+          .set({ name: input.name, updatedAt })
+          .where(eq(agents.id, id));
+        await transaction
+          .update(agentProfiles)
+          .set({ avatarSeed: input.avatarSeed, updatedAt })
+          .where(eq(agentProfiles.agentId, id));
+        return (await findAccessibleProfile(transaction, actor, id))!;
+      });
+    },
     async list(actor, hidden = false) {
       const rows = await joinedProfiles(database, actor).where(
         and(
@@ -498,7 +530,7 @@ export function createAgentProfileStore(
           ownerUserId: actor.id,
           title: input.title,
           roleDescription: input.roleDescription,
-          avatarSeed: id,
+          avatarSeed: input.avatarSeed ?? id,
           visibility: input.visibility,
         });
 

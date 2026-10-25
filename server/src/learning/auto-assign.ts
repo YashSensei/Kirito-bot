@@ -249,7 +249,7 @@ export function createLearningAutoAssign(options: {
 
   const instructions =
     options.instructions ??
-    `Run bun scripts/setup-learning.ts, or create a container with ID "${containerId}" in Intelligence; OpenBot assigns it within ${Math.round((options.retryMs ?? RETRY_MS) / 60_000)} minutes.`;
+    `Run bun scripts/setup-learning.ts, or create a container with ID "${containerId}" in Intelligence; Kirito-bot assigns it within ${Math.round((options.retryMs ?? RETRY_MS) / 60_000)} minutes.`;
   /** Whether this process already tried `create`: once at boot, again only when Admin asks. */
   let createTried = false;
   let createError: string | undefined;
@@ -312,7 +312,7 @@ export function createLearningAutoAssign(options: {
     if (found === "unavailable") {
       once("unavailable", {
         message:
-          "Intelligence could not be asked about the Learning container. OpenBot tries again.",
+          "Intelligence could not be asked about the Learning container. Kirito-bot tries again.",
       });
       return { state: "unavailable" };
     }
@@ -348,7 +348,7 @@ export function createLearningAutoAssign(options: {
         once("error", {
           errorType: error instanceof Error ? error.name : typeof error,
           message:
-            "Automatic Learning container assignment failed. OpenBot tries again.",
+            "Automatic Learning container assignment failed. Kirito-bot tries again.",
         });
         return { state: "unavailable" } as LearningAutoAssignState;
       })

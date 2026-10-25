@@ -302,6 +302,11 @@ describe("registered Copilot agents", () => {
     ).toMatchObject({ endpoint: "https://risk.internal:443/ag-ui" });
   });
 
+  test("uses xhigh reasoning for GPT-6.1 Sol", () => {
+    const configured = builtInAgentConfiguration({id:"general-assistant",name:"Kirito-bot",type:"built_in",systemPrompt:"Be helpful."}, {provider:"openai",defaultModel:"gpt-6.1-sol"}, "test-key");
+    expect(configured).toMatchObject({model:"openai/gpt-6.1-sol",providerOptions:{openai:{reasoningEffort:"xhigh"}}});
+  });
+
   test("configures an OpenAI built-in agent", () => {
     expect(
       builtInAgentConfiguration(

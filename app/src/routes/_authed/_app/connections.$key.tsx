@@ -100,7 +100,7 @@ export const Route = createFileRoute("/_authed/_app/connections/$key")({
   component: RouteComponent,
   /*
    * `?linked=` is how the GitHub account-link callback reports back to GitHub's page: `github` on
-   * success, `github-taken` when that account belongs to another OpenBot user, `failed` otherwise.
+   * success, `github-taken` when that account belongs to another Kirito-bot user, `failed` otherwise.
    *
    * `?action=` is the verifier's redirect saying WHICH action the consent just completed was for,
    * so an app's page can land on it rather than on the app.
@@ -143,7 +143,7 @@ function AppConnectionPage() {
    * Its only sender is the per-action verifier's redirect (`server/src/plugins/routes.ts`), so it is
    * a report of a consent that has just completed — news exactly once. Left in the address bar it is
    * read again on every reload and back-navigation, and "You just authorized X" is redrawn about a
-   * consent that may be hours old. That is the omission the Connections list closed for its own
+   * consent that may be hours old. That is the omission the Connectors list closed for its own
    * three report parameters.
    *
    * It is NOT only the notice, though: the same value marks the matching row of the grant list with
@@ -162,7 +162,7 @@ function AppConnectionPage() {
   }));
   const navigate = Route.useNavigate();
   /*
-   * ONE NAVIGATE, the same shape as the Connections list's: `search` replaces the whole object, so
+   * ONE NAVIGATE, the same shape as the Connectors list's: `search` replaces the whole object, so
    * a strip is written as dropping its keys from what is there and keeping the rest, never as a
    * rebuilt object. `linked` belongs to GitHub's page, which is not this one, so `action` is the
    * only one dropped.
@@ -313,7 +313,7 @@ function AppConnectionPage() {
   }
 
   const back = {
-    label: "Connections",
+    label: "Connectors",
     linkProps: { to: "/connections" as const },
   };
 
@@ -524,7 +524,7 @@ function AppConnectionPage() {
         <PageEmpty>
           {entry
             ? "Bots use one shared account for this app, the same for everybody."
-            : "OpenBot has no app by that name."}
+            : "Kirito-bot has no app by that name."}
         </PageEmpty>
       </PageShell>
     );
@@ -597,7 +597,7 @@ function AppConnectionPage() {
                          * had not, which is the one outcome worse than not offering it.
                          */
                         setNotice(
-                          `You can't disconnect here yet. To stop access now, remove OpenBot in your ${entry.vendor} account's third-party access settings.`,
+                          `You can't disconnect here yet. To stop access now, remove Kirito-bot in your ${entry.vendor} account's third-party access settings.`,
                         )
                       }
                       className="whitespace-nowrap"
@@ -609,7 +609,7 @@ function AppConnectionPage() {
                 </DropdownMenu>
               ) : (
                 /*
-                 * The arrow says this leaves OpenBot. It does: the next thing on screen is the
+                 * The arrow says this leaves Kirito-bot. It does: the next thing on screen is the
                  * vendor's own consent page, and a control that navigates away should look like one.
                  */
                 <Button
@@ -633,7 +633,7 @@ function AppConnectionPage() {
 
       {connection ? (
         <PageSection
-          description={`What you allowed, as ${entry.vendor} recorded it. This can be less than OpenBot asked for.`}
+          description={`What you allowed, as ${entry.vendor} recorded it. This can be less than Kirito-bot asked for.`}
           title="Access"
         >
           <PageRows>

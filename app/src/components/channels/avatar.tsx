@@ -1,4 +1,6 @@
-import Avatar from "boring-avatars";
+import { useQuery } from "@tanstack/react-query";
+import { agentListQueryOptions } from "@/lib/agents/queries";
+import { Mascot, appearanceOf } from "../agents/mascot";
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +25,7 @@ export const ChannelAvatar = memo(function ChannelAvatar({
 }) {
   const avatar =
     participantIds.length === 1 ? (
-      <Avatar className="size-full" name={participantIds[0]} size={size} />
+      <AgentFace id={participantIds[0]} size={size} typing={typing} />
     ) : (
       <GroupFaces participantIds={participantIds} size={size} />
     );
@@ -97,7 +99,7 @@ function GroupFaces({
               WebkitMaskComposite: "source-in",
             }}
           >
-            <Avatar className="size-full" name={id} size={diameter} />
+            <AgentFace id={id} size={diameter} />
           </div>
         );
       })}
@@ -125,6 +127,27 @@ function Dot({ className }: { className?: string }) {
   return (
     <span
       className={cn("size-1 rounded-full bg-primary animate-bounce", className)}
+    />
+  );
+}
+
+function AgentFace({
+  id,
+  size,
+  typing = false,
+}: {
+  id: string;
+  size: number;
+  typing?: boolean;
+}) {
+  const { data } = useQuery(agentListQueryOptions());
+  const agent = data?.find((a) => a.id === id);
+  return (
+    <Mascot
+      {...appearanceOf(agent?.avatarSeed)}
+      size={size}
+      name={agent?.name}
+      mood={typing ? "typing" : "idle"}
     />
   );
 }

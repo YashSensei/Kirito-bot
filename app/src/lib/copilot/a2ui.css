@@ -1,5 +1,5 @@
 /* biome-ignore-all lint/complexity/noImportantStyles: The SDK's primitive renderers use inline styles, so these narrowly scoped host-brand overrides need priority. */
-/* The public SDK catalog owns rendering and behavior; these hooks only match OpenBot's tokens.
+/* The public SDK catalog owns rendering and behavior; these hooks only match Kirito-bot's tokens.
  * !important is scoped to our catalog because the shipped basic components use inline styles. */
 [data-openbot-a2ui] {
   --a2ui-primary-color: var(--primary);

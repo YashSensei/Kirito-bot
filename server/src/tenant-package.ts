@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { parse } from "yaml";
 import { DEPLOYMENT_ROUTES } from "./computer/deployment-routes";
 import type { Database } from "./db/client";
@@ -880,7 +880,7 @@ export async function synchronizeTenantPackage(
           target: agentTable.id,
           setWhere: eq(agentTable.packageId, deploymentPackage.id),
           set: {
-            name: agent.name,
+            name: sql`case when exists (select 1 from ${agentProfiles} where ${agentProfiles.agentId} = ${agentTable.id} and ${agentProfiles.avatarSeed} like 'miles:%') then ${agentTable.name} else ${agent.name} end`,
             type: agent.type,
             configuration: agent.configuration,
             packageId: deploymentPackage.id,
@@ -914,7 +914,7 @@ export async function synchronizeTenantPackage(
             ownerUserId: null,
             title: agent.title,
             roleDescription: agent.roleDescription,
-            avatarSeed: agent.avatarSeed ?? canonicalAgent.id,
+            avatarSeed: sql`case when ${agentProfiles.avatarSeed} like 'miles:%' then ${agentProfiles.avatarSeed} else ${agent.avatarSeed ?? canonicalAgent.id} end`,
             visibility: "public",
             deletedAt: null,
             updatedAt,

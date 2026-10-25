@@ -116,6 +116,22 @@ async function json(response: Response) {
 }
 
 describe("agent input parser", () => {
+  test("accepts a chosen Miles appearance and rejects arbitrary asset paths", () => {
+    expect(
+      parseAgentInput({ ...validInput, avatarSeed: "miles:teardrop:violet" }),
+    ).toEqual({
+      ok: true,
+      value: { ...validInput, avatarSeed: "miles:teardrop:violet" },
+    });
+    for (const avatarSeed of [
+      "forged-avatar",
+      "../../secret",
+      "miles:blob:invalid",
+      42,
+    ])
+      expect(parseAgentInput({ ...validInput, avatarSeed }).ok).toBe(false);
+  });
+
   test.each([[null], [[]], ["input"], [42], [true]])(
     "rejects a non-object root: %p",
     (input) => {
@@ -197,7 +213,6 @@ describe("agent input parser", () => {
         visibility: " private ",
         id: "forged-agent",
         ownerUserId: "attacker",
-        avatarSeed: "forged-avatar",
         deletedAt: "now",
         systemOwned: true,
         // `endpoint` is a real field for BYO-agent; validation protects it rather than refusing it
@@ -373,6 +388,7 @@ describe("agent lifecycle routes", () => {
           pinned: false,
           systemOwned: false,
           canManage: true,
+          canCustomize: true,
           mine: true,
           builtIn: false,
         },
@@ -388,6 +404,7 @@ describe("agent lifecycle routes", () => {
           pinned: false,
           systemOwned: false,
           canManage: false,
+          canCustomize: false,
           mine: false,
           builtIn: false,
         },
@@ -403,6 +420,7 @@ describe("agent lifecycle routes", () => {
           pinned: false,
           systemOwned: true,
           canManage: false,
+          canCustomize: false,
           mine: false,
           builtIn: false,
         },
@@ -453,7 +471,6 @@ describe("agent lifecycle routes", () => {
       visibility: " private ",
       id: "forged-agent",
       ownerUserId: "attacker",
-      avatarSeed: "forged-avatar",
       deletedAt: "now",
       systemOwned: true,
       // A real field now, not a forged one; the rest of this list still is.

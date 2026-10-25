@@ -99,7 +99,7 @@ export function createServerApprovalService(deps: {
                 id: request.id,
                 kind: "approval",
                 requestId: request.id,
-                text: `${botName} asks for approval to use ${action.toolRef}. Open the Bot's page in OpenBot to review this action.`,
+                text: `${botName} asks for approval to use ${action.toolRef}. Open the Bot's page in Kirito-bot to review this action.`,
               },
             );
         }

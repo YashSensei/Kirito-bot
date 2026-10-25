@@ -476,7 +476,7 @@ export function createDeliveryRouter(deps: {
           throw new DeliveryRefusedError("Push device unavailable.");
         result = await deps.providers.push.send({
           token: device.token,
-          title: "OpenBot",
+          title: "Kirito-bot",
           body: row.text,
           channelId: row.channelId,
           kind: row.kind,

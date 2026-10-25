@@ -34,8 +34,10 @@ function createControlStore(computerId: string): ControlStore {
     for (const listener of listeners) listener();
   };
   const refresh = async () => {
+    // A remote VM may take longer than the poll interval. Do not abort every response
+    // before it arrives; explicit ownership changes still cancel stale reads below.
+    if (reading || snapshot.busy) return;
     const mine = version;
-    reading?.abort();
     const abort = new AbortController();
     reading = abort;
     const control = await readControl(

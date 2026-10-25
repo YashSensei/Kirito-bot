@@ -27,7 +27,10 @@ if (!config.computer) {
     "No computer provider is configured, so there are no computers to suspend.",
   );
 }
-if (config.computer.provider !== "sandbox") {
+if (
+  config.computer.provider !== "sandbox" &&
+  config.computer.provider !== "lizard"
+) {
   throw new Error(
     `The culler only has something to do where each Bot has its own computer, and this deployment uses the "${config.computer.provider}" provider.`,
   );

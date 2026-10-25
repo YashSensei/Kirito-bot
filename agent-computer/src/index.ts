@@ -43,6 +43,7 @@ import {
   parseScrollDelta,
 } from "./request-validation";
 import { type InputMessage, startScreencast } from "./screencast";
+import { startDesktopCast } from "./desktop-cast";
 import {
   markElementSecret,
   maskSensitiveValues,
@@ -597,6 +598,11 @@ serve<StreamData>({
          */
         let casting: Page | undefined;
         const attach = async () => {
+          if (process.env.COMPUTER_DESKTOP_DISPLAY) {
+            if (session.viewer.standingOf(ws).state === "casting") return;
+            await claim.install(await startDesktopCast(send));
+            return;
+          }
           const target = await currentPage(ws.data.botId);
           if (target === casting) return;
           const cast = await startScreencast(target, send);

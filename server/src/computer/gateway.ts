@@ -56,6 +56,7 @@ import {
   policyInitiator,
 } from "./policy";
 import type { ComputerProvider, ComputerUpdate } from "./provider";
+import { publishDesktopControl } from "./rfb";
 import type {
   ActionResult,
   ClickInput,
@@ -144,6 +145,7 @@ export type ComputerGatewayOptions = {
 };
 
 export interface ComputerGateway {
+  transportHeaders?(url: string): Record<string, string>;
   readonly provider: ComputerProvider;
   locate(botId: string): Promise<string>;
   status(botId: string): Promise<ComputerStatus>;
@@ -282,6 +284,9 @@ export function createComputerGateway(
 ): ComputerGateway {
   const { provider, auditStore } = options;
   const transport = createComputerTransport({
+    ...(provider.transportHeaders
+      ? { headersFor: (url: string) => provider.transportHeaders!(url) }
+      : {}),
     ...(options.token ? { token: options.token } : {}),
     ...(options.allowPrivateHosts !== undefined
       ? { allowPrivateHosts: options.allowPrivateHosts }
@@ -741,6 +746,7 @@ export function createComputerGateway(
   return {
     provider,
     locate,
+    transportHeaders: (url) => provider.transportHeaders?.(url) ?? {},
     screenshot,
     snapshot,
     read,
@@ -780,6 +786,10 @@ export function createComputerGateway(
       const state = await post<ControlState>(botId, "/control/take", {
         requestId,
       });
+      publishDesktopControl(
+        botId,
+        state.holder === "human" && !state.transitioning,
+      );
       await writeControlEvent(auditStore, "computer.control_taken", {
         botId,
         actor,
@@ -791,6 +801,7 @@ export function createComputerGateway(
     },
 
     async releaseControl(botId: string, actor: ActionActor, requestId: string) {
+      publishDesktopControl(botId, false);
       const state = await post<ControlState>(botId, "/control/release", {
         requestId,
       });
@@ -802,6 +813,7 @@ export function createComputerGateway(
     },
 
     async cancelControl(botId: string, actor: ActionActor, requestId: string) {
+      publishDesktopControl(botId, false);
       const state = await post<ControlState>(botId, "/control/cancel", {
         requestId,
       });
@@ -812,7 +824,28 @@ export function createComputerGateway(
       return state;
     },
 
-    control(botId: string, requestId?: string): Promise<ControlState> {
+    async control(botId: string, requestId?: string): Promise<ControlState> {
+      // Header polling is passive. Only an explicit wake or tool call starts a VM.
+      if (provider.locateIfRunning) {
+        const address = await provider.locateIfRunning(botId);
+        if (!address)
+          return {
+            holder: "bot",
+            since: new Date(0).toISOString(),
+            requested: false,
+            transitioning: false,
+            resumeSnapshotRequired: false,
+            recoveryRequired: false,
+          };
+        const verdict = checkComputerAddress(address);
+        if (!verdict.allowed)
+          throw new ComputerUnavailableError(verdict.reason);
+        return transport.call<ControlState>(
+          verdict.url,
+          botId,
+          `/control${requestId ? `?requestId=${encodeURIComponent(requestId)}` : ""}`,
+        );
+      }
       return get<ControlState>(
         botId,
         `/control${requestId ? `?requestId=${encodeURIComponent(requestId)}` : ""}`,

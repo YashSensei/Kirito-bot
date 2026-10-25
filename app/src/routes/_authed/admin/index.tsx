@@ -54,7 +54,8 @@ const SECTIONS: {
 }[] = [
   {
     title: "What Bots can reach",
-    description: "What a Bot can touch outside OpenBot, and the limits on it.",
+    description:
+      "What a Bot can touch outside Kirito-bot, and the limits on it.",
     items: [
       {
         title: "Credentials",
@@ -89,7 +90,7 @@ const SECTIONS: {
       {
         title: "Plugins",
         description:
-          "The services OpenBot can reach, and which Bots can use them.",
+          "The services Kirito-bot can reach, and which Bots can use them.",
         icon: IconPuzzle,
         linkOptions: { to: "/admin/plugins" },
       },
@@ -153,7 +154,7 @@ const SECTIONS: {
     items: [
       {
         title: "Audit",
-        description: "Every action taken in OpenBot, and who took it.",
+        description: "Every action taken in Kirito-bot, and who took it.",
         icon: IconListDetails,
         linkOptions: { to: "/admin/audit" },
       },

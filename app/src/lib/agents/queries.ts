@@ -43,6 +43,7 @@ export type AgentProfile = {
   assignedToMe?: boolean;
   systemOwned: boolean;
   canManage: boolean;
+  canCustomize?: boolean;
   /**
    * Whether the signed-in person created this coworker.
    *

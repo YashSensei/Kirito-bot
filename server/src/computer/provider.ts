@@ -1,4 +1,5 @@
 import type { ComputerConfig } from "../config";
+import { createLizardComputerProvider } from "./lizard";
 import {
   createSandboxComputerProvider,
   inClusterConfig,
@@ -80,6 +81,14 @@ export function describeComputerIsolation(
  * Callers use this interface and do not need to know which backend is active.
  */
 export interface ComputerProvider {
+  desktopEndpoint?(
+    botId: string,
+  ): Promise<{ url: string; headers: Record<string, string> }>;
+  locateIfRunning?(botId: string): Promise<string | undefined>;
+  touch?(botId: string): void;
+  suspendIdle?(idleAfterMs: number): Promise<void>;
+  /** Private transport credentials; never serialized into UI responses. */
+  transportHeaders?(url: string): Record<string, string>;
   /** The provider name for logs and status output. */
   readonly name: string;
   /** How the provider separates computers between Bots. */
@@ -280,6 +289,8 @@ export function createComputerProvider(
   config: ComputerConfig,
 ): ComputerProvider {
   switch (config.provider) {
+    case "lizard":
+      return createLizardComputerProvider(config);
     case "docker": {
       const options: SupervisorOptions = {
         baseUrl: config.baseUrl,

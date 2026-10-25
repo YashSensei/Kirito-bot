@@ -1,0 +1,487 @@
+.computer-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  position: relative;
+  isolation: isolate;
+  line-height: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.computer-avatar svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  user-select: none;
+}
+.computer-avatar * {
+  animation-play-state: var(--motion-state) !important;
+}
+.body-hover,
+.body-action {
+  transform-origin: 50px 62px;
+}
+.body-hover {
+  transition: transform 0.28s ease-out;
+}
+.face-spacing {
+  transform-origin: 0 0;
+  transition: transform 0.3s ease-out;
+}
+.has-text .face-spacing {
+  transform: translateY(-4px) scale(0.72);
+}
+.gaze,
+.blink,
+.rotor,
+.dial,
+.lens {
+  transform-origin: 0 0;
+}
+.gaze {
+  transition: transform 0.28s ease-out;
+}
+.animated .blink {
+  animation: eye-blink 6s ease-in-out infinite;
+  animation-delay: var(--blink-phase);
+}
+.animated.mood-thinking .gaze {
+  animation: thinking-look 5.2s ease-in-out infinite;
+}
+.animated.mood-writing .gaze {
+  animation: write-look 3.8s ease-in-out infinite;
+}
+.animated.mood-searching .gaze {
+  animation: search-look 4.8s ease-in-out infinite;
+}
+.animated.motion-full:not(.has-text) .body-action {
+  animation: gentle-nod 5.4s ease-in-out infinite;
+  animation-delay: var(--blink-phase);
+}
+.animated.motion-full:not(.has-text):is(
+    .theme-compact,
+    .theme-pager,
+    .theme-handheld
+  )
+  .body-action {
+  animation-name: gentle-lift;
+}
+.animated.motion-full:not(.has-text):is(
+    .theme-outline,
+    .theme-floppy,
+    .theme-tilted
+  )
+  .body-action {
+  animation-name: gentle-lean;
+}
+.animated.motion-full .rotor {
+  animation: reel-turn 7.5s linear infinite;
+}
+.animated.motion-full .disc {
+  animation-duration: 10s;
+}
+.animated.motion-full .dial {
+  animation: tune-dial 5s ease-in-out infinite;
+}
+.animated.motion-full .lens {
+  animation: focus-lens 5.5s ease-in-out infinite;
+}
+.animated.motion-full .hardware-key {
+  animation: key-press 1.1s ease-in-out infinite;
+  animation-delay: var(--key-delay);
+}
+.ink {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.write-cursor {
+  transform: translate(15px, 8px);
+}
+.animated .write-cursor {
+  animation: write-gesture 3.8s cubic-bezier(0.35, 0, 0.2, 1) infinite;
+}
+.animated .ink-one {
+  animation: write-line-one 3.8s linear infinite;
+}
+.animated .ink-two {
+  animation: write-line-two 3.8s linear infinite;
+}
+.animated .ink-three {
+  animation: write-line-three 3.8s linear infinite;
+}
+.code {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.animated .code-one {
+  animation: type-line-one 2.6s steps(9, end) infinite;
+}
+.animated .code-two {
+  animation: type-line-two 2.6s steps(8, end) infinite;
+}
+.animated .typing-cursor {
+  animation: type-cursor 2.6s steps(9, end) infinite;
+}
+.animated .scan {
+  animation: screen-scan 3.6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+.animated .connect-left {
+  animation: connect-left 2.4s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+.animated .connect-right {
+  animation: connect-right 2.4s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+.update-progress {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0.35;
+}
+.animated .update-progress {
+  animation: update-progress 2.2s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+.animated .waiting-light {
+  animation: waiting-light 2.8s ease-in-out infinite;
+}
+@keyframes write-gesture {
+  0% {
+    transform: translate(0, -3px) rotate(-15deg);
+  }
+  7% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(25px, 0);
+  }
+  30% {
+    transform: translate(0, 4px);
+  }
+  49% {
+    transform: translate(25px, 4px);
+  }
+  54% {
+    transform: translate(0, 8px);
+  }
+  73% {
+    transform: translate(24px, 8px);
+  }
+  84%,
+  93% {
+    transform: translate(26px, 3px) rotate(-12deg);
+  }
+  100% {
+    transform: translate(0, -3px) rotate(-15deg);
+  }
+}
+@keyframes write-line-one {
+  0%,
+  7% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  25%,
+  88% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes write-line-two {
+  0%,
+  30% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  49%,
+  88% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes write-line-three {
+  0%,
+  54% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  73%,
+  88% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes type-line-one {
+  0%,
+  5% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  46%,
+  87% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes type-line-two {
+  0%,
+  48% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  80%,
+  87% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes type-cursor {
+  0%,
+  5% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  46% {
+    transform: translate(25px, 0);
+  }
+  48% {
+    transform: translate(0, 5px);
+  }
+  80%,
+  87% {
+    transform: translate(25px, 5px);
+    opacity: 1;
+  }
+  96%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+@keyframes screen-scan {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(26px);
+  }
+}
+@keyframes connect-left {
+  0%,
+  100% {
+    transform: translateX(-1px);
+    opacity: 0.35;
+  }
+  45%,
+  70% {
+    transform: translateX(3px);
+    opacity: 1;
+  }
+}
+@keyframes connect-right {
+  0%,
+  100% {
+    transform: translateX(1px);
+    opacity: 0.35;
+  }
+  45%,
+  70% {
+    transform: translateX(-3px);
+    opacity: 1;
+  }
+}
+@keyframes update-progress {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  75%,
+  87% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes waiting-light {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+.animated.mood-launch .body-reveal {
+  animation: wake-up 0.65s ease-out both;
+}
+@media (hover: hover) {
+  :is(.motion-full:hover, button:hover .motion-full) .body-hover {
+    transform: translateY(-0.7px) rotate(-1deg);
+  }
+  :is(.motion-full.theme-compact:hover, button:hover .motion-full.theme-compact)
+    .body-hover {
+    transform: translateY(-1px);
+  }
+  :is(.motion-full.theme-floppy:hover, button:hover .motion-full.theme-floppy)
+    .body-hover {
+    transform: rotate(1deg);
+  }
+  :is(.motion-full:hover, button:hover .motion-full) .gaze {
+    transform: translate(0.6px, -0.3px);
+  }
+}
+button:focus-visible .motion-full .body-hover {
+  transform: translateY(-0.7px);
+}
+@keyframes eye-blink {
+  0%,
+  43%,
+  48%,
+  89%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  45%,
+  91% {
+    transform: scaleY(0.12);
+  }
+}
+@keyframes thinking-look {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35%,
+  65% {
+    transform: translate(0.7px, -0.5px);
+  }
+}
+@keyframes write-look {
+  0%,
+  100% {
+    transform: translate(-0.5px, 0.6px);
+  }
+  50% {
+    transform: translate(0.7px, 0.6px);
+  }
+}
+@keyframes search-look {
+  0%,
+  100% {
+    transform: translate(-0.7px, 0);
+  }
+  50% {
+    transform: translate(0.7px, 0);
+  }
+}
+@keyframes gentle-nod {
+  0%,
+  100% {
+    transform: rotate(-0.5deg);
+  }
+  50% {
+    transform: rotate(0.5deg);
+  }
+}
+@keyframes gentle-lift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.8px);
+  }
+}
+@keyframes gentle-lean {
+  0%,
+  100% {
+    transform: rotate(-0.7deg);
+  }
+  50% {
+    transform: rotate(0.7deg);
+  }
+}
+@keyframes reel-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes tune-dial {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes focus-lens {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes key-press {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(0.3px);
+    opacity: 0.65;
+  }
+}
+@keyframes wake-up {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .computer-avatar,
+  .computer-avatar * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .body-hover,
+  .gaze,
+  .rotor,
+  .dial,
+  .lens {
+    transform: none !important;
+  }
+}

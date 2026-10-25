@@ -206,6 +206,7 @@ import {
   storedProvider,
 } from "./plugins/provider-wiring";
 import { createPluginStore } from "./plugins/store";
+import { installKritovasResearch } from "./plugins/kritovas-setup";
 import {
   grantedSkills,
   grantedTools,
@@ -947,6 +948,23 @@ const pluginStore = createPluginStore({
   brokerProvider,
 });
 
+if (
+  config.singleUser &&
+  process.env.KRITOVAS_SETUP_DEFAULTS === "true" &&
+  process.env.PARALLEL_API_KEY
+) {
+  await installKritovasResearch(
+    pluginStore,
+    createCredentialAdminService(
+      config.keyEncryptionKey,
+      credentialStore,
+      bootAuditStore,
+    ),
+    process.env.PARALLEL_API_KEY,
+    DEV_ACTOR.id,
+  );
+}
+
 /*
  * Personal ⇄ Shared for a brokered app. Built here because it needs the plugin store, the shared-use
  * store and the approval policy at once: making an app Shared ends people's accounts, approves each
@@ -1126,6 +1144,28 @@ void recordAuditEvent(bootAuditStore, {
  * rather than inferred.
  */
 const isolation = describeComputerIsolation(computerProvider);
+// This local fork has one API process; the Lizard provider serializes idle sleep with wake/tool calls.
+if (
+  config.singleUser &&
+  config.computer?.provider === "lizard" &&
+  computerProvider?.suspendIdle
+) {
+  const idleAfterMs = config.computer.idleAfterMs;
+  let sweeping = false;
+  setInterval(async () => {
+    if (sweeping) return;
+    sweeping = true;
+    try {
+      await computerProvider.suspendIdle!(idleAfterMs);
+    } catch {
+      console.warn(
+        "Kirito-bot could not complete the idle computer check; it will retry.",
+      );
+    } finally {
+      sweeping = false;
+    }
+  }, 60_000).unref();
+}
 
 void recordAuditEvent(bootAuditStore, {
   eventType: "computer.isolation_loaded",
@@ -1237,7 +1277,7 @@ const hostAccessBroker = createHostAccessBroker(Date.now, {
 // grant, the policy and the audit row are exactly where they were. Host-folder tools are also
 // server-dispatched: the selected Bot and the signed-in owner are bound here, then the desktop worker
 // receives only opaque grant ids and relative paths.
-// Memory lives in CopilotKit Intelligence when this deployment is entitled to it, and in OpenBot's own
+// Memory lives in CopilotKit Intelligence when this deployment is entitled to it, and in Kirito-bot's own
 // tables when it is not; see memory/store.ts. Its own client, like the thread reader's: the
 // constructor opens nothing.
 const personalMemoryStore = createMemoryStore(database, {
@@ -2619,4 +2659,4 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
   });
 }
 
-console.info(`OpenBot server listening on http://127.0.0.1:${port}`);
+console.info(`Kirito-bot server listening on http://127.0.0.1:${port}`);

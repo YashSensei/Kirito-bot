@@ -1,3 +1,4 @@
+import * as parallelRest from "./parallel-rest";
 import * as arcade from "./arcade";
 import * as builtinRoutines from "./builtin-routines";
 import * as composio from "./composio";
@@ -120,6 +121,7 @@ export type VendorTransport = {
  * provenance for a Composio app; either way, a kind that does not exist should not typecheck.
  */
 export type TransportKind =
+  | "parallel-rest"
   | "mcp"
   | "google-drive-rest"
   | "builtin-routines"
@@ -150,6 +152,7 @@ export type CuratedTransportKind = Exclude<
 
 const TRANSPORTS: Record<TransportKind, VendorTransport> = {
   mcp,
+  "parallel-rest": parallelRest,
   "google-drive-rest": driveRest,
   "builtin-routines": builtinRoutines,
   composio,

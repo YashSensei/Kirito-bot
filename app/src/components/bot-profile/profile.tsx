@@ -9,6 +9,7 @@ import { Link } from "@tanstack/react-router";
 import type * as React from "react";
 import { useState } from "react";
 import { AbstractAvatar } from "@/components/agents/abstract-avatar";
+import { IdentityPanel } from "@/components/agents/identity-panel";
 import { BotNeedsYou } from "@/components/approvals/waiting";
 import { PageRows, PageSection } from "@/components/layout/page-shell";
 import { SharedAppNotice } from "@/components/plugins/shared-app-notice";
@@ -87,6 +88,7 @@ export function BotProfile({
         </div>
       </div>
       <div className="mt-4">
+        {agent.canCustomize && <IdentityPanel agent={agent} />}
         <BotPausedBanner agentId={agent.id} />
       </div>
 

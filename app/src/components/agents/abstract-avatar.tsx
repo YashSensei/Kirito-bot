@@ -1,5 +1,4 @@
-import Avatar from "boring-avatars";
-
+import { appearanceOf, Mascot } from "./mascot";
 export function AbstractAvatar({
   name,
   seed,
@@ -9,17 +8,5 @@ export function AbstractAvatar({
   seed: string;
   size?: number;
 }) {
-  return (
-    <span
-      role="img"
-      aria-label={name}
-      className="inline-flex shrink-0 overflow-hidden rounded-full"
-      style={{ height: size, width: size }}
-    >
-      {/* The drawing carries its own role; hidden so the coworker is announced once, by name. */}
-      <span aria-hidden="true" className="contents">
-        <Avatar name={seed} size={size} />
-      </span>
-    </span>
-  );
+  return <Mascot {...appearanceOf(seed)} name={name} size={size} />;
 }

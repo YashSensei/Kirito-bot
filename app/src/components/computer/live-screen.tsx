@@ -93,6 +93,7 @@ type Props = {
   /** Called with a human-readable reason when the stream cannot be established. */
   onProblem?: (problem: string | null) => void;
   retryKey?: number;
+  fit?: boolean;
 };
 
 type FrameMessage = {
@@ -106,6 +107,7 @@ export function LiveScreen({
   driving,
   onProblem,
   retryKey = 0,
+  fit = false,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
@@ -484,7 +486,12 @@ export function LiveScreen({
   return (
     <canvas
       ref={canvasRef}
-      className={`block h-auto w-full ${driving ? "cursor-crosshair" : ""}`}
+      className={
+        fit
+          ? "block h-auto w-auto max-h-full max-w-full cursor-default"
+          : "block h-auto w-full cursor-default"
+      }
+      tabIndex={driving ? 0 : -1}
       // Only forward input during takeover.
       {...(driving
         ? {
