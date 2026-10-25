@@ -1,12 +1,12 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 1,
   "workspaces": {
     "": {
       "name": "@openbot/agent-bot",
       "dependencies": {
         "@ag-ui/core": "0.0.57",
         "@ag-ui/encoder": "0.0.57",
+        "@failproofai/sdk": "^0.0.1-beta.0",
         "openai": "^4.104.0",
       },
     },
@@ -19,6 +19,8 @@
     "@ag-ui/proto": ["@ag-ui/proto@0.0.57", "", { "dependencies": { "@ag-ui/core": "0.0.57", "@bufbuild/protobuf": "^2.2.5", "@protobuf-ts/protoc": "^2.11.1" } }, "sha512-pPENOZt0P6ibH8sCTgq05wLYXi5t3P9B5r/1bWYehXjUxtyOdnukSlWM++SsCIwUXsQdm/b3aBgGjEeTF7RenA=="],
 
     "@bufbuild/protobuf": ["@bufbuild/protobuf@2.14.0", "", {}, "sha512-C3UGsiCwSprE2NKIIFA3hCDlpXTMCAXRZuEVp88L1GY36Y41+rYL5fryE+nOFhp4p4JPQvdV8PQ4DWgHgeTE+w=="],
+
+    "@failproofai/sdk": ["@failproofai/sdk@0.0.1-beta.0", "", { "peerDependencies": { "@langchain/core": ">=0.3.0 <2", "@mastra/core": ">=0.20.0 <2", "ai": ">=4.0.0 <8", "llamaindex": ">=0.11.4 <1" }, "optionalPeers": ["@langchain/core", "@mastra/core", "ai", "llamaindex"], "bin": { "failproofai-evaluator": "dist/esm/evaluator/cli.js" } }, "sha512-I5NqXuqeUrrLGYmpQViZxscwFnuEWUR11hUU/UjWk/4/s6KDbrHWdbiKcgVQjSxAJ1Kiy0AGBjsXzObq4n3W2Q=="],
 
     "@protobuf-ts/protoc": ["@protobuf-ts/protoc@2.11.1", "", { "bin": { "protoc": "protoc.js" } }, "sha512-mUZJaV0daGO6HUX90o/atzQ6A7bbN2RSuHtdwo8SSF2Qoe3zHwa4IHyCN1evftTeHfLmdz+45qo47sL+5P8nyg=="],
 

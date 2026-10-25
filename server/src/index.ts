@@ -59,6 +59,7 @@ import { ApprovalRefusedError } from "./approvals/types";
 import { createServerApprovalService } from "./approvals/wiring";
 import {
   type AuditInitiator,
+  addAuditTap,
   auditSink,
   createAuditReader,
   createAuditStore,
@@ -66,6 +67,15 @@ import {
   PERSON_INITIATOR,
   recordAuditEvent,
 } from "./audit";
+import {
+  recordError,
+  recordHumanInput,
+  recordHumanWait,
+  recordPolicyDecision,
+  recordToolResult,
+  recordToolUse,
+  safeText,
+} from "./failproof";
 import { startRetentionSweeps } from "./audit-retention";
 import { createAuth } from "./auth";
 import { DEV_ACTOR, initializeDevActorUser } from "./auth/dev-actor";
@@ -554,6 +564,71 @@ const policyListener = await startPolicyListener(
  * unavailable, and the row is a note for a reader rather than something the server depends on.
  */
 const bootAuditStore = createAuditStore(database);
+
+// Mirror the authoritative server audit trail into the local Failproof spool.
+addAuditTap((row) => {
+  const payload = row.payload ?? {};
+  const sessionId =
+    typeof payload.threadId === "string"
+      ? payload.threadId
+      : typeof payload.runId === "string"
+        ? payload.runId
+        : typeof payload.sessionId === "string"
+          ? payload.sessionId
+          : "audit-" + row.targetType + "-" + (row.targetId ?? row.eventType);
+  const agentId = typeof payload.bot === "string" ? payload.bot : "openbot-server";
+  const toolCallId = typeof payload.toolCallId === "string" ? payload.toolCallId : row.eventType + "-" + (row.targetId ?? "event");
+  const toolName = row.eventType.replaceAll(".", "_");
+  const decision = payload.decision;
+  if (decision && typeof decision === "object") {
+    const d = decision as { allowed?: unknown; rule?: unknown; reason?: unknown };
+    if (typeof d.allowed === "boolean") {
+      recordPolicyDecision({
+        sessionId,
+        toolCallId,
+        toolName,
+        allowed: d.allowed,
+        rule: typeof d.rule === "string" ? d.rule : undefined,
+        reason: typeof d.reason === "string" ? d.reason : undefined,
+        botId: typeof payload.bot === "string" ? payload.bot : undefined,
+      });
+    }
+  }
+  recordToolUse({
+    toolName,
+    toolCallId,
+    input: { eventType: row.eventType, targetType: row.targetType },
+    sessionId,
+    agentId,
+  });
+  recordToolResult({
+    toolName,
+    toolCallId,
+    output: safeText(payload),
+    sessionId,
+    agentId,
+  });
+  if (/help|handoff|human|question|approval|challenge/i.test(row.eventType)) {
+    recordHumanWait({
+      sessionId,
+      inputId: toolCallId,
+      prompt: row.eventType,
+      reason: safeText(payload, 1000),
+    });
+  }
+  if (/resumed|answered|released|control_taken/i.test(row.eventType)) {
+    recordHumanInput({ sessionId, inputId: toolCallId, response: row.eventType });
+  }
+  if (/error|failed|refused|declined|timeout/i.test(row.eventType)) {
+    recordError({
+      errorType: row.eventType,
+      message: safeText(payload, 2000),
+      sessionId,
+      agentId,
+      fw_area: row.targetType,
+    });
+  }
+});
 // The gallery every headless turn offers its Bot, refusals written to the same trail.
 const componentCatalog = headlessComponentCatalog({
   store: componentStore,

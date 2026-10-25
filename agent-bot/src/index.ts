@@ -2,6 +2,7 @@ import type { BaseEvent, RunAgentInput } from "@ag-ui/core";
 import { EventEncoder } from "@ag-ui/encoder";
 import { serve } from "bun";
 import OpenAI from "openai";
+import * as failproofai from "@failproofai/sdk";
 import { hasManagedAgentToken } from "../../shared/agent-authorisation";
 import { listenPort } from "../../shared/listen-port";
 import {
@@ -29,6 +30,20 @@ if (!resolvedPort.ok) {
   process.exit(1);
 }
 const PORT = resolvedPort.port;
+
+// Keep Failproof traces with this checkout by default. A deployment can override
+// the location with FAILPROOFAI_HOME without changing the agent code.
+const FAILPROOF_HOME =
+  process.env.FAILPROOFAI_HOME?.trim() ||
+  `${import.meta.dir}/../../../.failproofai`;
+failproofai.configure({
+  // The TypeScript SDK appends `events` to baseDir. Keep that directory under
+  // the Failproof home layout so the local daemon/dashboard can discover it at
+  // `<FAILPROOFAI_HOME>/custom-agents/events`.
+  baseDir: `${FAILPROOF_HOME}/custom-agents`,
+  environment: process.env.AGENTEYE_ENVIRONMENT?.trim() || "openbot",
+});
+
 const MANAGED_AGENT_TOKEN = process.env.MANAGED_AGENT_TOKEN?.trim();
 if (!MANAGED_AGENT_TOKEN) {
   console.error(
@@ -114,6 +129,10 @@ const openai = new OpenAI({
   baseURL: BASE_URL,
 });
 
+// AG-UI sends the complete conversation on each turn. Remember tool result ids
+// so a previous result is not emitted again when the next model turn starts.
+const recordedToolResults = new Set<string>();
+
 /** Every tool comes from the caller. This service publishes none of its own, on purpose. */
 function toProviderTools(input: RunAgentInput) {
   if (!input.tools?.length) return undefined;
@@ -134,6 +153,20 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
       const utf8 = new TextEncoder();
       const send = (event: BaseEvent) =>
         controller.enqueue(utf8.encode(encoder.encodeSSE(event)));
+      // AG-UI creates a new run for each tool round; the thread is the stable
+      // session identity that lets Failproof join those rounds into one trace.
+      const sessionId = input.threadId || input.runId;
+      const goal =
+        input.messages
+          ?.filter((message) => message.role === "user")
+          .at(-1)?.content
+          ?.toString() || "Complete the OpenBot run.";
+      const span = failproofai.agent.open("openbot-agent", {
+        sessionId,
+        goal,
+      });
+      const requestId = input.runId;
+      let modelClosed = false;
 
       send({
         type: "RUN_STARTED",
@@ -142,11 +175,39 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
       } as BaseEvent);
 
       try {
+        // A tool result arrives on the next AG-UI run because OpenBot executes
+        // tools at the surface where their effects are visible. Close that
+        // cross-run leaf before recording the next model request.
+        for (const message of input.messages ?? []) {
+          if (message.role !== "tool") continue;
+          const toolCallId = message.toolCallId;
+          const toolName = "tool";
+          if (
+            typeof toolCallId === "string" &&
+            !recordedToolResults.has(toolCallId)
+          ) {
+            recordedToolResults.add(toolCallId);
+            failproofai.event.toolResult({
+              toolName,
+              toolCallId,
+              output: message.content,
+            });
+          }
+        }
+        failproofai.event.modelRequest({
+          model: MODEL,
+          requestId,
+          messages: toProviderMessages(input) as unknown as Array<
+            Record<string, unknown>
+          >,
+          tools: toProviderTools(input),
+        });
         const completion = await openai.chat.completions.create({
           model: MODEL,
           messages: toProviderMessages(input),
           tools: toProviderTools(input),
           stream: true,
+          stream_options: { include_usage: true },
         });
 
         const messageId = `msg_${input.runId}`;
@@ -157,10 +218,20 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
           number,
           { id: string; name: string; args: string }
         >();
+        let inputTokens: number | undefined;
+        let outputTokens: number | undefined;
+        let stopReason: string | undefined;
 
         for await (const chunk of completion) {
+          if (chunk.usage) {
+            inputTokens = chunk.usage.prompt_tokens;
+            outputTokens = chunk.usage.completion_tokens;
+          }
           const delta = chunk.choices[0]?.delta;
           if (!delta) continue;
+          if (chunk.choices[0]?.finish_reason) {
+            stopReason = chunk.choices[0].finish_reason;
+          }
 
           if (delta.content) {
             if (!textOpen) {
@@ -197,6 +268,20 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
         }
 
         for (const call of toolCalls.values()) {
+          let inputArgs: Record<string, unknown> | undefined;
+          try {
+            const parsed = JSON.parse(call.args || "{}");
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+              inputArgs = parsed as Record<string, unknown>;
+            }
+          } catch {
+            // The raw streamed arguments remain in the AG-UI event.
+          }
+          failproofai.event.toolUse({
+            toolName: call.name || "tool",
+            toolCallId: call.id,
+            input: inputArgs,
+          });
           send({
             type: "TOOL_CALL_START",
             toolCallId: call.id,
@@ -210,6 +295,17 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
           } as BaseEvent);
           send({ type: "TOOL_CALL_END", toolCallId: call.id } as BaseEvent);
         }
+        failproofai.event.modelResponse({
+          model: MODEL,
+          requestId,
+          stopReason: stopReason || (toolCalls.size ? "tool_calls" : "stop"),
+          inputTokens,
+          outputTokens,
+          content: toolCalls.size
+            ? [...toolCalls.values()].map(({ id, name }) => ({ id, name }))
+            : undefined,
+        });
+        modelClosed = true;
 
         send({
           type: "RUN_FINISHED",
@@ -217,6 +313,14 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
           runId: input.runId,
         } as BaseEvent);
       } catch (error) {
+        if (!modelClosed) {
+          failproofai.event.modelResponse({
+            model: MODEL,
+            requestId,
+            stopReason: "error",
+            content: error instanceof Error ? error.message : String(error),
+          });
+        }
         // Reported as a run error rather than a dropped connection, so the transcript can say what
         // went wrong. A stream that simply ends leaves the surface waiting forever with no reason.
         send({
@@ -227,6 +331,7 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
               : "The Bot could not answer.",
         } as BaseEvent);
       } finally {
+        span.dispose();
         controller.close();
       }
     },

@@ -10,6 +10,7 @@
   "dependencies": {
     "@ag-ui/core": "0.0.57",
     "@ag-ui/encoder": "0.0.57",
+    "@failproofai/sdk": "^0.0.1-beta.0",
     "openai": "^4.104.0"
   }
 }

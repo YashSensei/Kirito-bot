@@ -21,6 +21,7 @@ node_modules
 app/src/lib/generated/application-config.ts
 .logs/
 .demo-logs/
+.failproofai/
 **/.impeccable
 .wave-state.md
 

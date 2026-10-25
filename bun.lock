@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 1,
   "workspaces": {
     "": {
       "name": "openbot",
@@ -81,6 +80,7 @@
         "@better-auth/sso": "^1.7.1",
         "@composio/core": "^0.18.1",
         "@copilotkit/runtime": "1.77.0",
+        "@failproofai/sdk": "0.0.1-beta.0",
         "@mastra/client-js": "^1.43.0",
         "@mastra/core": "^1.64.0",
         "@modelcontextprotocol/sdk": "^1.30.0",
@@ -437,6 +437,8 @@
     "@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.28.2", "", { "os": "win32", "cpu": "ia32" }, "sha512-YmJbfTlvU7Sdn9BB+4PRES4oB6pxgS37MAONj+hBr/cpXS1aBPKXxNnDbu+QCWPj0o9dgyxeq79g6c5P8KeuYA=="],
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.28.2", "", { "os": "win32", "cpu": "x64" }, "sha512-5ebpxr3nWMzrL/rnUI755Jkuee0bHL/Gq0WTF9lvcpv73wAp5eu8MfBUgWK9bhWvZjj7yX8etf/8tI8Ney695g=="],
+
+    "@failproofai/sdk": ["@failproofai/sdk@0.0.1-beta.0", "", { "peerDependencies": { "@langchain/core": ">=0.3.0 <2", "@mastra/core": ">=0.20.0 <2", "ai": ">=4.0.0 <8", "llamaindex": ">=0.11.4 <1" }, "optionalPeers": ["@langchain/core", "@mastra/core", "ai", "llamaindex"], "bin": { "failproofai-evaluator": "dist/esm/evaluator/cli.js" } }, "sha512-I5NqXuqeUrrLGYmpQViZxscwFnuEWUR11hUU/UjWk/4/s6KDbrHWdbiKcgVQjSxAJ1Kiy0AGBjsXzObq4n3W2Q=="],
 
     "@fastify/busboy": ["@fastify/busboy@2.1.1", "", {}, "sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA=="],
 
