@@ -75,7 +75,21 @@ export type SandboxComputerConfig = {
   policy?: ActionPolicy;
 };
 
+export type LizardComputerConfig = {
+  provider: "lizard";
+  idleAfterMs: number;
+  apiKey: string;
+  projectId: string;
+  snapshotId: string;
+  apiUrl?: string;
+  stateFile: string;
+  token: string;
+  allowPrivateHosts: boolean;
+  policy?: ActionPolicy;
+};
+
 export type ComputerConfig =
+  | LizardComputerConfig
   | DockerComputerConfig
   | SharedComputerConfig
   | SandboxComputerConfig;
@@ -861,7 +875,7 @@ function authConfig(
   /*
    * A list this deployment cannot enforce is worse than no list.
    *
-   * `common` is multi-tenant, and OpenBot never sets `requireEmailVerification` or reads
+   * `common` is multi-tenant, and Kirito-bot never sets `requireEmailVerification` or reads
    * `users.emailVerified`, so the address a rule is applied to is one the signing-in tenant's own
    * administrator wrote. Anybody may create a tenant. So an allowlist under `common` refuses the
    * honest and admits the rest, while reading on the Boundaries page as though it were a control.
@@ -1126,6 +1140,24 @@ export function durationMs(value: string): number {
 }
 
 function computerConfig(environment: Environment): ComputerConfig | undefined {
+  if (optional(environment, "COMPUTER_PROVIDER") === "lizard") {
+    return {
+      provider: "lizard",
+      idleAfterMs: durationMs(
+        optional(environment, "COMPUTER_LIZARD_IDLE_AFTER") ?? "10m",
+      ),
+      apiKey: required(environment, "LIZARD_API_KEY"),
+      projectId: required(environment, "LIZARD_PROJECT_ID"),
+      snapshotId: required(environment, "LIZARD_SNAPSHOT_ID"),
+      apiUrl: optional(environment, "LIZARD_API_URL"),
+      stateFile:
+        optional(environment, "LIZARD_STATE_FILE") ??
+        "../.local/lizard-computers.json",
+      token: required(environment, "COMPUTER_TOKEN"),
+      allowPrivateHosts: privateHostsAllowed(environment),
+      policy: actionPolicy(environment),
+    };
+  }
   const supervisorAddress = optional(environment, "COMPUTER_SUPERVISOR_URL");
   const sharedAddress = optional(environment, "AGENT_COMPUTER_URL");
   const sandboxNamespace = optional(environment, "COMPUTER_SANDBOX_NAMESPACE");

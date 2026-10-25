@@ -324,7 +324,7 @@ const resumeSchema = z.object({
   always: z.boolean().optional(),
   by: z.string().max(512).optional(),
 });
-/** A card click answering one OpenBot approval, or null when this run is not a resume. */
+/** A card click answering one Kirito-bot approval, or null when this run is not a resume. */
 export function resumeFromInput(input: OpenTagRunInput) {
   const props = input.forwardedProps;
   if (!props || typeof props !== "object" || !("command" in props)) return null;
@@ -472,7 +472,7 @@ const isPoint = (value: unknown): value is Point =>
   Number.isFinite((value as Point).value);
 
 /**
- * One of OpenBot's gallery charts as OpenTag's `render_chart` arguments, or null when it is not a
+ * One of Kirito-bot's gallery charts as OpenTag's `render_chart` arguments, or null when it is not a
  * chart or cannot be drawn within that component's limits (the reply text still carries it).
  */
 export function chartForOpenTag(component: {

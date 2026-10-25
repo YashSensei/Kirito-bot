@@ -53,3 +53,12 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+
+# Kritovas local credentials, VM records, and verification output
+.local/
+outputs/
+
+# Added by CopilotKit CLI: browser snapshots a coding agent writes.
+.playwright-mcp/
+
+.copilotkit/

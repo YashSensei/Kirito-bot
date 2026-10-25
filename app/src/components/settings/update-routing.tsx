@@ -62,7 +62,7 @@ export function UpdateRoutingSection() {
     reach.data ? reach.data.available[transport] : true;
   return (
     <PageSection
-      description="Where each kind of update goes when you're away. OpenBot on the web always shows everything."
+      description="Where each kind of update goes when you're away. Kirito-bot on the web always shows everything."
       title="Where updates go"
     >
       {routing.isPending || reach.isPending ? null : routing.error ? (

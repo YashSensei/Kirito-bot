@@ -322,7 +322,7 @@ function isHttpUrl(value: string) {
 /**
  * What the person asking has said they want, in every channel, from every coworker.
  *
- * The OpenBot equivalent of a CLAUDE.md, and the third instruction carrier beside the two that
+ * The Kirito-bot equivalent of a CLAUDE.md, and the third instruction carrier beside the two that
  * already existed. A role is the coworker's and reads the same to everybody who talks to it; a skill
  * is pulled in for one task. This is the person's, and it is true of every task they ever ask for —
  * how they want to be written to, what their company is called, what it is not to be called.
@@ -417,6 +417,9 @@ export function builtInAgentConfiguration(
 
   return {
     model: planModel ?? `${model.provider}/${model.defaultModel}`,
+    ...(model.provider === "openai" && model.defaultModel === "gpt-6.1-sol"
+      ? { providerOptions: { openai: { reasoningEffort: "xhigh" } } }
+      : {}),
     /*
      * The package's role, then the person's own standing instructions, then what this Bot actually
      * holds, then the computer.
@@ -1500,12 +1503,12 @@ function remoteAgentWithStandingRole(
 }
 
 const RESERVED_MASTRA_CONTEXT_DESCRIPTIONS = new Set([
-  "OpenBot standing role",
-  "OpenBot granted tools guidance",
-  "OpenBot Bot id",
-  "OpenBot deployment tools",
-  "OpenBot signed run assertion",
-  "OpenBot learned skills",
+  "Kirito-bot standing role",
+  "Kirito-bot granted tools guidance",
+  "Kirito-bot Bot id",
+  "Kirito-bot deployment tools",
+  "Kirito-bot signed run assertion",
+  "Kirito-bot learned skills",
 ]);
 
 function callerMastraContext(context: AgentContext[]): AgentContext[] {
@@ -1529,29 +1532,29 @@ function mastraOpenBotContext({
 }): AgentContext[] {
   return [
     {
-      description: "OpenBot standing role",
+      description: "Kirito-bot standing role",
       value: standingMessage.content,
     },
     ...(holdingsMessage
       ? [
           {
-            description: "OpenBot granted tools guidance",
+            description: "Kirito-bot granted tools guidance",
             value: holdingsMessage.content,
           },
         ]
       : []),
     {
-      description: "OpenBot Bot id",
+      description: "Kirito-bot Bot id",
       value: botId,
     },
     {
-      description: "OpenBot deployment tools",
+      description: "Kirito-bot deployment tools",
       value: JSON.stringify(deploymentTools),
     },
     ...(runAssertion
       ? [
           {
-            description: "OpenBot signed run assertion",
+            description: "Kirito-bot signed run assertion",
             value: runAssertion,
           },
         ]
@@ -1785,10 +1788,10 @@ export function mountCopilotRuntime(
     // See IntelligenceKnowingANewThread.
     intelligence: intelligenceClient,
     licenseToken: intelligence.licenseToken,
-    // Carried on the events the runtime already sends, so OpenBot's traffic is separable from any
+    // Carried on the events the runtime already sends, so Kirito-bot's traffic is separable from any
     // other deployment's. Adds no events of its own.
     telemetryProperties: {
-      ...(config.accessibility ? { accessibility_title: "OpenBot" } : {}),
+      ...(config.accessibility ? { accessibility_title: "Kirito-bot" } : {}),
       ...desktopTelemetryProperties(),
     },
     /*

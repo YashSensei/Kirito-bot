@@ -8,7 +8,7 @@ import type { CopilotKitProviderProps } from "@copilotkit/react-core/v2";
 /**
  * Keep the SDK's schemas, data bindings and action handlers. The wrapper only supplies a stable
  * styling hook: the 1.70.1 basic catalog uses inline styles and does not consume the theme prop.
- * These are declarative primitives, not the separately granted OpenBot gallery/custom components.
+ * These are declarative primitives, not the separately granted Kirito-bot gallery/custom components.
  */
 function branded(
   component: ReactComponentImplementation,

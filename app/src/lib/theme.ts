@@ -1,7 +1,7 @@
-export const THEME_STORAGE_KEY = "openbot-theme";
+export const THEME_STORAGE_KEY = "kritovas-theme";
 
 export function parseStoredDarkTheme(value: string | null) {
-  return value === "dark";
+  return value !== "light";
 }
 
 type ThemeEffects = {

@@ -55,12 +55,12 @@ const TRANSPORT_LABEL: Record<string, string> = {
   sms: "SMS",
 };
 
-/** Where this Bot's conversations continue outside OpenBot, each place once. */
+/** Where this Bot's conversations continue outside Kirito-bot, each place once. */
 export function reachSummary(transports: readonly string[]): string {
   const places = [...new Set(transports)]
     .map((transport) => TRANSPORT_LABEL[transport] ?? transport)
     .sort((a, b) => a.localeCompare(b));
-  return places.length ? places.join(", ") : "Only in OpenBot";
+  return places.length ? places.join(", ") : "Only in Kirito-bot";
 }
 
 /** The apps feeding this Bot facts, and whether it researches in the background. */

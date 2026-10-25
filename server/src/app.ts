@@ -1,3 +1,4 @@
+import { grantKritovasResearch } from "./plugins/kritovas-setup";
 import type { Hono as HonoApp, MiddlewareHandler } from "hono";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
@@ -1357,7 +1358,7 @@ export function createApp(
     });
   }
   // The CopilotKit runtime, behind the same session guard as every other API route. Mounted last so
-  // its own routing under /api/copilotkit cannot shadow an OpenBot route declared above.
+  // its own routing under /api/copilotkit cannot shadow an Kirito-bot route declared above.
   if (copilotHandler) {
     // Mounted at the ROOT with the handler carrying its own basePath. Mounting it at
     // "/api/copilotkit" as well double-prefixes it: Hono strips the prefix before the handler sees
@@ -1466,6 +1467,12 @@ export function createApp(
                 config.managedAgent.alsoRun,
               ].filter((url): url is URL => url !== undefined),
             }
+          : undefined,
+        config.singleUser &&
+          pluginStore &&
+          process.env.KRITOVAS_SETUP_DEFAULTS === "true"
+          ? (agent, actor) =>
+              grantKritovasResearch(pluginStore, agent.id, actor.id)
           : undefined,
       ),
     );

@@ -49,6 +49,7 @@ const FIRECRAWL: ResearchTools = Object.freeze({
  */
 export const RESEARCH_TOOLS: Readonly<Record<string, ResearchTools>> =
   Object.freeze({
+    "parallel-miles": { search: "web_search", fetch: "web_fetch" },
     parallel: PARALLEL,
     "parallel-authenticated": PARALLEL,
     exa: EXA,

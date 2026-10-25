@@ -26,7 +26,13 @@ export function ComputerControlButton({
           }
         }}
       >
-        {human ? "Hand back" : "Take control"}
+        {busy
+          ? human
+            ? "Returning control…"
+            : "Taking control…"
+          : human
+            ? "Return control"
+            : "Take control"}
       </Button>
       {control?.transitioning ? (
         <span className="text-xs text-muted-foreground" role="status">

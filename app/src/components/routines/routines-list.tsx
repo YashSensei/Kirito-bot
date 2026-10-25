@@ -262,8 +262,8 @@ export function RoutinesList({
             Routines aren't running.
           </span>{" "}
           {sweep?.lastSweptAt
-            ? `OpenBot last checked them ${relativeTime(sweep.lastSweptAt)}. None will run until it starts again. Ask an admin if this keeps happening.`
-            : "OpenBot hasn't started running routines yet, so none of these will run. Ask an admin to set this up."}
+            ? `Kirito-bot last checked them ${relativeTime(sweep.lastSweptAt)}. None will run until it starts again. Ask an admin if this keeps happening.`
+            : "Kirito-bot hasn't started running routines yet, so none of these will run. Ask an admin to set this up."}
         </p>
       ) : null}
 

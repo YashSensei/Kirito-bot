@@ -6,6 +6,7 @@ import type { OpenBotRole } from "./auth/roles";
 import { websocket as channelSocket } from "./channels/socket";
 import type { ComputerGateway } from "./computer/gateway";
 import { streamPathBotId } from "./computer/stream-path";
+import { RfbClientFilter, subscribeDesktopControl } from "./computer/rfb";
 import type { DeploymentConfig } from "./config";
 import type { DemonstrationRecorder } from "./demonstrations/recording";
 import type { DemonstrationStore } from "./demonstrations/store";
@@ -20,10 +21,14 @@ import type { DemonstrationStore } from "./demonstrations/store";
 /** What each proxied socket carries: where to connect inward, and the socket once opened. */
 type StreamData = {
   upstream: string;
+  upstreamHeaders?: Record<string, string>;
   ownerUserId: string;
   botId: string;
   recordingId?: string;
   inward?: WebSocket;
+  desktop?: boolean;
+  filter?: RfbClientFilter;
+  stopControlWatch?: () => void;
 };
 
 /**
@@ -131,16 +136,30 @@ export function startHttpServer(deps: {
          * for. Every acting path already went through the gateway; this one did not.
          */
         let upstream: string;
+        let upstreamHeaders: Record<string, string> | undefined;
+        const desktop = url.searchParams.get("desktop") === "true";
         try {
-          const streamBase = computerGateway
-            ? await computerGateway.locate(streamBotId)
-            : undefined;
-          if (!streamBase) {
-            return new Response("No computer address is configured.", {
-              status: 503,
-            });
+          if (desktop) {
+            const endpoint =
+              await computerGateway?.provider.desktopEndpoint?.(streamBotId);
+            if (!endpoint)
+              return new Response("Desktop streaming is unavailable.", {
+                status: 503,
+              });
+            upstream = endpoint.url;
+            upstreamHeaders = endpoint.headers;
+          } else {
+            const streamBase = computerGateway
+              ? await computerGateway.locate(streamBotId)
+              : undefined;
+            if (!streamBase) {
+              return new Response("No computer address is configured.", {
+                status: 503,
+              });
+            }
+            upstream = toStreamUrl(streamBase, streamBotId);
+            upstreamHeaders = computerGateway?.transportHeaders?.(streamBase);
           }
-          upstream = toStreamUrl(streamBase, streamBotId);
         } catch (error) {
           // Said out loud rather than falling back to another Bot's computer, which is the failure this
           // whole path exists to prevent.
@@ -151,16 +170,17 @@ export function startHttpServer(deps: {
             { status: 502 },
           );
         }
-        const recording = await demonstrationStore.active(
-          actor.id,
-          streamBotId,
-        );
+        const recording = desktop
+          ? null
+          : await demonstrationStore.active(actor.id, streamBotId);
         if (recording)
           upstream += `&recording=${encodeURIComponent(recording.id)}`;
         if (
           server.upgrade(request, {
             data: {
               upstream,
+              upstreamHeaders,
+              desktop,
               ownerUserId: actor.id,
               botId: streamBotId,
               ...(recording ? { recordingId: recording.id } : {}),
@@ -180,11 +200,72 @@ export function startHttpServer(deps: {
           return;
         }
         const stream = ws.data;
-        const inward = new WebSocket(stream.upstream);
+        const inward = new (
+          WebSocket as unknown as {
+            new (
+              url: string,
+              options: { headers?: Record<string, string> },
+            ): WebSocket;
+          }
+        )(stream.upstream, { headers: stream.upstreamHeaders });
         stream.inward = inward;
+        if (stream.desktop) {
+          inward.binaryType = "arraybuffer";
+          const filter = new RfbClientFilter();
+          stream.filter = filter;
+          const setControl = (human: boolean) => {
+            for (const release of filter.setControl(human))
+              if (inward.readyState === WebSocket.OPEN) inward.send(release);
+          };
+          let reading = false,
+            closed = false,
+            controlVersion = 0;
+          const refresh = async () => {
+            if (reading || closed) return;
+            reading = true;
+            const version = controlVersion;
+            try {
+              const control = await computerGateway?.control(stream.botId);
+              if (!closed && version === controlVersion)
+                setControl(
+                  control?.holder === "human" && !control.transitioning,
+                );
+            } catch {
+              if (!closed) setControl(false);
+            } finally {
+              reading = false;
+            }
+          };
+          const unsubscribe = subscribeDesktopControl(stream.botId, (human) => {
+            controlVersion++;
+            setControl(human);
+          });
+          const timer = setInterval(refresh, 1000);
+          void refresh();
+          stream.stopControlWatch = () => {
+            closed = true;
+            clearInterval(timer);
+            unsubscribe();
+            for (const release of filter.releaseInput())
+              if (inward.readyState === WebSocket.OPEN) inward.send(release);
+          };
+        }
         // Frames outward, input inward. Buffered by neither side: a frame the browser is too slow for
         // should be dropped, not queued, because a stale frame is worse than a missing one.
         inward.onmessage = (event) => {
+          if (stream.desktop) {
+            if (!(event.data instanceof ArrayBuffer)) {
+              ws.close(1003, "Invalid desktop frame");
+              return;
+            }
+            // RFB deltas must stay ordered. Disconnect a stalled consumer instead of dropping bytes.
+            if (ws.getBufferedAmount() > 8 * 1024 * 1024) {
+              ws.close(1013, "Desktop connection is too slow");
+              return;
+            }
+            ws.send(event.data);
+            return;
+          }
           if (stream.recordingId) {
             let recorded: unknown;
             try {
@@ -259,13 +340,33 @@ export function startHttpServer(deps: {
           channelSocket.message(asChannelSocket(ws), raw);
           return;
         }
-        if (ws.data.inward?.readyState === 1) ws.data.inward.send(String(raw));
+        if (ws.data.inward?.readyState === 1) {
+          if (ws.data.filter) {
+            if (typeof raw === "string") {
+              ws.close(1003, "Desktop input must be binary");
+              return;
+            }
+            try {
+              for (const message of ws.data.filter.push(raw)) {
+                if ([4, 5, 6, 255].includes(message[0]))
+                  computerGateway?.provider.touch?.(ws.data.botId);
+                ws.data.inward.send(message);
+              }
+            } catch {
+              ws.close(1003, "Unsupported desktop input");
+            }
+            return;
+          }
+          computerGateway?.provider.touch?.(ws.data.botId);
+          ws.data.inward.send(String(raw));
+        }
       },
       close(ws, code, reason) {
         if (!isProxiedStream(ws.data)) {
           channelSocket.close(asChannelSocket(ws), code, reason);
           return;
         }
+        ws.data.stopControlWatch?.();
         ws.data.inward?.close();
       },
     },

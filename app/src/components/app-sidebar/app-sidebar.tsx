@@ -1,6 +1,8 @@
+import { Mascot, appearanceOf } from "@/components/agents/mascot";
+import { agentListQueryOptions } from "@/lib/agents/queries";
+import { NewBotSheet } from "@/components/agents/new-bot-sheet";
 import {
   IconBolt,
-  IconBox,
   IconLogout,
   IconPlug,
   IconPlus,
@@ -223,9 +225,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
   const signOut = useMutation(signOutMutationOptions(queryClient));
   const channels = useInfiniteQuery(channelListQueryOptions());
+  const bots = useQuery(agentListQueryOptions());
   // One socket for the app, opened where the roster is kept live.
   useChannelEvents();
   const [search, setSearch] = useState("");
+  const [creatingBot, setCreatingBot] = useState(false);
   const scrollRoot = useRef<HTMLDivElement>(null);
   const searching = search.trim().length > 0;
   const visibleChannels = pinnedFirst(matchingChannels(channels.data, search));
@@ -252,7 +256,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="font-semibold text-[14px] tracking-tighter h-full leading-tight"
               render={(props) => (
                 <Link {...appLinkOptions} {...props}>
-                  {appConfig.brand.productName}
+                  <Mascot size={30} color="blue" />
+                  <span>{appConfig.brand.productName}</span>
                 </Link>
               )}
             />
@@ -276,8 +281,42 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent ref={scrollRoot} className="scroll-fade-b">
+        <SidebarGroup className="gap-1 px-3 pb-3">
+          <div className="flex items-center justify-between px-2 py-1">
+            <p className="text-xs text-muted-foreground">Your bots</p>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Create Bot"
+              title="Create Bot"
+              onClick={() => setCreatingBot(true)}
+            >
+              <IconPlus />
+            </Button>
+          </div>
+          <SidebarMenu>
+            {bots.data
+              ?.filter((bot) => !bot.hidden)
+              .map((bot) => (
+                <SidebarMenuItem key={bot.id}>
+                  <SidebarMenuButton
+                    className="h-11"
+                    render={
+                      <Link to="/channel/new" search={{ agent: bot.id }} />
+                    }
+                  >
+                    <Mascot {...appearanceOf(bot.avatarSeed)} size={34} />
+                    <span className="truncate">{bot.name}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+          </SidebarMenu>
+        </SidebarGroup>
         <SidebarMenu>
           <SidebarGroup className="gap-px">
+            <p className="px-2 pb-2 text-xs text-muted-foreground">
+              Conversations
+            </p>
             <SidebarMenuItem>
               <InputGroup className="bg-background text-sm rounded-lg h-9">
                 <InputGroupInput
@@ -346,6 +385,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         </SidebarMenu>
       </SidebarContent>
+      <NewBotSheet
+        open={creatingBot}
+        onClose={() => setCreatingBot(false)}
+        onCreated={(agentId) => {
+          setCreatingBot(false);
+          void navigate({ to: "/channel/new", search: { agent: agentId } });
+        }}
+      />
       <SidebarFooter>
         <SidebarMenu className="gap-px">
           <SidebarMenuItem>
@@ -367,30 +414,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <BotsNavBadge />
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {/*
-           * Beside Bots rather than inside Admin: each is somebody's own. Capabilities are your skills
-           * and what your Bots remember about you; Connections are the apps a Bot reaches as you.
-           * Capabilities links to `/capabilities` rather than a tab, so it stays lit on both tabs.
-           */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              className="hover:bg-foreground/5 h-10"
-              render={(props) => (
-                <Link
-                  {...props}
-                  to="/capabilities"
-                  activeProps={{
-                    className: "bg-foreground/5",
-                  }}
-                />
-              )}
-            >
-              <div className="size-[28px] flex items-center justify-center">
-                <IconBox />
-              </div>
-              <span className="text-sm trackint-tight">Capabilities</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               className="hover:bg-foreground/5 h-10"
@@ -407,7 +430,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <div className="size-[28px] flex items-center justify-center">
                 <IconPlug />
               </div>
-              <span className="text-sm trackint-tight">Connections</span>
+              <span className="text-sm trackint-tight">Connectors</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>

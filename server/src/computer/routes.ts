@@ -98,6 +98,16 @@ export function createComputerRoutes(
     return context.json(await gateway.status(botId));
   });
 
+  routes.post("/:botId/wake", async (context) => {
+    try {
+      const botId = context.req.param("botId");
+      await gateway.locate(botId);
+      return context.json(await gateway.status(botId));
+    } catch (error) {
+      return context.json(errorBody(error), statusFor(error));
+    }
+  });
+
   routes.get("/:botId/screenshot", async (context) => {
     try {
       return context.json(await gateway.screenshot(context.req.param("botId")));

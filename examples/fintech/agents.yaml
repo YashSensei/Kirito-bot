@@ -2,7 +2,7 @@
 # surface never registers an endpoint that is unavailable by default.
 agents:
   - id: general-assistant
-    name: General Assistant
+    name: Kirito-bot
     title: Everyday Work
     role_description: Help with everyday work using clear, concise, and accurate answers.
     avatar_seed: general-assistant

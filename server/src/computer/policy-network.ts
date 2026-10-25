@@ -91,6 +91,7 @@ export async function pushEgressPolicies(options: {
         ...(options.token ? { token: options.token } : {}),
         ...(options.webBotAuth ? { webBotAuth: options.webBotAuth } : {}),
         fetchImpl,
+        transportHeaders: options.provider.transportHeaders?.(computer.url),
       });
       report.pushed.push(computer.botId);
     } catch (error) {
@@ -117,13 +118,16 @@ export async function pushEgressPolicy(
     token?: string;
     webBotAuth?: WebBotAuth;
     fetchImpl?: typeof fetch;
+    transportHeaders?: Record<string, string>;
   } = {},
 ): Promise<void> {
   const response = await (options.fetchImpl ?? fetch)(
     `${url.replace(/\/$/, "")}/egress-policy`,
     {
       method: "PUT",
+      redirect: "error",
       headers: {
+        ...options.transportHeaders,
         "content-type": "application/json",
         "x-openbot-bot-id": botId,
         ...(options.token ? { "x-openbot-computer-token": options.token } : {}),
@@ -190,6 +194,7 @@ export function withPolicyPushOnWake(
       const policy = await options.policyForBot(botId);
       if (!policy) return;
       await pushEgressPolicy(url, botId, policy, {
+        transportHeaders: provider.transportHeaders?.(url),
         ...(options.token ? { token: options.token } : {}),
         ...(options.webBotAuth ? { webBotAuth: options.webBotAuth } : {}),
         ...(options.fetchImpl ? { fetchImpl: options.fetchImpl } : {}),

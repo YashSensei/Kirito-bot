@@ -97,7 +97,7 @@ function RouteComponent() {
             // Said out loud: a message that silently reaches somebody you did not choose is the
             // kind of surprise that costs trust the first time it happens.
             <p className="mt-2 w-full max-w-2xl text-xs text-muted-foreground text-center">
-              OpenBot picks the right Bot. Type <code>@</code> to choose one.
+              Kirito-bot picks the right Bot. Type <code>@</code> to choose one.
             </p>
           ) : null}
           {error ? (

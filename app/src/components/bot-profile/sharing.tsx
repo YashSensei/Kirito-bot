@@ -150,7 +150,7 @@ export function SharingSections({ agent }: { agent: AgentProfile }) {
         ) : (
           <PageEmpty>
             {agent.visibility === "public"
-              ? "Not published to the team. It's public, so everyone on OpenBot can already use it."
+              ? "Not published to the team. It's public, so everyone on Kirito-bot can already use it."
               : agent.mine
                 ? "Not published. Only you can use it."
                 : "Not published."}

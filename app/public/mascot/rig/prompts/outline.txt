@@ -1,0 +1,4 @@
+Use case: background-extraction
+Asset type: transparent raster outline body layer for the Miles computer mascot animation rig.
+Input image 1: edit target, the user's outlined retro computer mascot.
+Remove the dark rounded background tile and the two cream eye marks. Preserve the complete computer outline, stand, cream strokes, perspective, soft line texture, proportions, and original identity. Keep the computer screen empty. All space outside the outline must be genuinely transparent. The screen interior should be near-black so independently animated cream eyes can be placed on it later. Do not add limbs, a face, text, symbols, furniture, or props. Center the whole computer on a genuinely transparent 1024 by 1024 canvas with about 12 percent clear margin around it. Clean antialiased edges, no checkerboard pixels, no floor or cast shadow. This is a reusable stationary body layer; eyes and gestures will be animated separately in code.

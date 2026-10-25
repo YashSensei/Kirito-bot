@@ -289,10 +289,10 @@ function RouteComponent() {
   const [ref, bounds] = useMeasure();
 
   /*
-   * The last three slides are for somebody evaluating OpenBot locally, never for an organization's people:
+   * The last three slides are for somebody evaluating Kirito-bot locally, never for an organization's people:
    * the server says single-user mode, which an organization's deployment, always behind sign-in,
    * cannot be in. Until the answer arrives they are left out, so a slow or failed request never
-   * shows an organization's employees a page about deploying OpenBot themselves.
+   * shows an organization's employees a page about deploying Kirito-bot themselves.
    *
    * NOT GATED ON `selfHostBanner` AS WELL. That flag is off for any deployment with a paid
    * Intelligence entitlement, and the stack `copilotkit local` installs runs on an enterprise

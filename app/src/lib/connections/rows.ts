@@ -52,8 +52,8 @@ export function isBrokeredGithub(
 
 export const IDENTITY_SUMMARIES = {
   github:
-    "Lets OpenBot recognise you on GitHub, so a repository's events can start your Bots' work.",
-  slack: "Lets OpenBot recognise you when you message it from Slack.",
+    "Lets Kirito-bot recognise you on GitHub, so a repository's events can start your Bots' work.",
+  slack: "Lets Kirito-bot recognise you when you message it from Slack.",
 } as const;
 
 const IDENTITY_TITLES = { github: "GitHub", slack: "Slack" } as const;

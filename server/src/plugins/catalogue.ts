@@ -215,6 +215,31 @@ const FIRECRAWL_READ_TOOLS = Object.freeze([
  */
 export const CATALOGUE: readonly CatalogueEntry[] = Object.freeze([
   {
+    key: "parallel-miles",
+    title: "Parallel Research",
+    vendor: "Parallel",
+    summary: "Web search, extraction, images, entities, and FindAll research.",
+    host: "https://api.parallel.ai",
+    path: "/",
+    transport: "parallel-rest",
+    auth: { kind: "deployment-bearer" },
+    readTools: Object.freeze([
+      "web_search",
+      "web_fetch",
+      "parallel_image_search",
+      "parallel_entity_search",
+      "parallel_findall_status",
+      "parallel_findall_result",
+    ]),
+    writeTools: Object.freeze([
+      "parallel_findall_create",
+      "parallel_findall_extend",
+      "parallel_findall_cancel",
+      "parallel_findall_enrich",
+    ]),
+    docsUrl: "https://docs.parallel.ai",
+  },
+  {
     key: "parallel",
     title: "Parallel Search",
     vendor: "Parallel",
@@ -412,7 +437,7 @@ export const CATALOGUE: readonly CatalogueEntry[] = Object.freeze([
   {
     key: "routines",
     title: "Routines",
-    vendor: "OpenBot",
+    vendor: "Kirito-bot",
     summary:
       "Standing instructions a Bot runs on a schedule, as whoever scheduled them.",
     /*
@@ -433,7 +458,8 @@ export const CATALOGUE: readonly CatalogueEntry[] = Object.freeze([
       "resume_trigger",
       "delete_trigger",
     ]),
-    docsUrl: "https://github.com/CopilotKit/OpenBot/blob/main/docs/routines.md",
+    docsUrl:
+      "https://github.com/CopilotKit/Kirito-bot/blob/main/docs/routines.md",
   },
 ]);
 

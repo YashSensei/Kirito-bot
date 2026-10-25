@@ -23,7 +23,7 @@ import type { AppVariables, AuthenticatedActor } from "./guards";
 
 export const DEV_ACTOR: AuthenticatedActor = {
   id: "dev-local-user",
-  email: "dev@openbot.local",
+  email: "dev@kirito-bot.local",
   role: "admin",
 };
 

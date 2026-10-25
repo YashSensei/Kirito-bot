@@ -36,7 +36,7 @@ function RouteComponent() {
    */
   return (
     <PageShell
-      description="How OpenBot looks and works for you. Message list settings follow your account. The theme stays in this browser."
+      description="How Kirito-bot looks and works for you. Message list settings follow your account. The theme stays in this browser."
       title="Preferences"
     >
       <PageSection title="General">
@@ -45,7 +45,7 @@ function RouteComponent() {
             <ItemContent>
               <ItemTitle>Dark theme</ItemTitle>
               <ItemDescription>
-                Use the dark appearance across OpenBot.
+                Use the dark appearance across Kirito-bot.
               </ItemDescription>
             </ItemContent>
             <ItemActions>
