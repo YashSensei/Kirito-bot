@@ -133,6 +133,16 @@ const openai = new OpenAI({
 // so a previous result is not emitted again when the next model turn starts.
 const recordedToolResults = new Set<string>();
 
+// Failproof is local evidence, not a transcript store. Keep event metadata useful for
+// debugging while excluding prompts, tool results, credentials, and page content.
+function messageSummary(messages: RunAgentInput["messages"] | undefined) {
+  return (messages ?? []).map((message) => ({
+    role: message.role,
+    toolCallId: typeof message.toolCallId === "string" ? message.toolCallId : undefined,
+    contentChars: typeof message.content === "string" ? message.content.length : undefined,
+  }));
+}
+
 /** Every tool comes from the caller. This service publishes none of its own, on purpose. */
 function toProviderTools(input: RunAgentInput) {
   if (!input.tools?.length) return undefined;
@@ -156,11 +166,12 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
       // AG-UI creates a new run for each tool round; the thread is the stable
       // session identity that lets Failproof join those rounds into one trace.
       const sessionId = input.threadId || input.runId;
-      const goal =
-        input.messages
-          ?.filter((message) => message.role === "user")
-          .at(-1)?.content
-          ?.toString() || "Complete the OpenBot run.";
+      const userMessages = (input.messages ?? []).filter(
+        (message) => message.role === "user",
+      );
+      const goal = userMessages.length
+        ? `Complete the OpenBot run (${userMessages.length} user message${userMessages.length === 1 ? "" : "s"}, ${messageSummary(input.messages).reduce((total, message) => total + (message.contentChars ?? 0), 0)} characters).`
+        : "Complete the OpenBot run.";
       const span = failproofai.agent.open("openbot-agent", {
         sessionId,
         goal,
@@ -190,17 +201,20 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
             failproofai.event.toolResult({
               toolName,
               toolCallId,
-              output: message.content,
+              output: {
+                contentChars:
+                  typeof message.content === "string"
+                    ? message.content.length
+                    : undefined,
+              },
             });
           }
         }
         failproofai.event.modelRequest({
           model: MODEL,
           requestId,
-          messages: toProviderMessages(input) as unknown as Array<
-            Record<string, unknown>
-          >,
-          tools: toProviderTools(input),
+          messages: messageSummary(input.messages),
+          toolCount: input.tools?.length ?? 0,
         });
         const completion = await openai.chat.completions.create({
           model: MODEL,
@@ -280,7 +294,12 @@ async function runAgent(input: RunAgentInput): Promise<Response> {
           failproofai.event.toolUse({
             toolName: call.name || "tool",
             toolCallId: call.id,
-            input: inputArgs,
+            input: inputArgs
+              ? {
+                  keys: Object.keys(inputArgs),
+                  argumentChars: call.args.length,
+                }
+              : { argumentChars: call.args.length },
           });
           send({
             type: "TOOL_CALL_START",
