@@ -37,11 +37,15 @@
     "setup:database": "bun scripts/kritovas.ts database",
     "computer:build:lizard": "bun scripts/kritovas.ts snapshot",
     "computer:cull": "bun scripts/kritovas.ts cull",
+    "failproof:demo": "node scripts/failproof-demo.mjs",
+    "failproof:dashboard": "node scripts/failproof-dashboard.mjs",
+    "failproof:codex-log": "node scripts/failproof-codex-log.mjs",
     "start": "bun scripts/kritovas.ts dev"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.10",
     "@copilotkit/aimock": "1.43.0",
+    "@failproofai/sdk": "^0.0.1-beta.0",
     "@lizard-build/sdk": "0.1.78",
     "@types/bun": "^1.3.3",
     "roughjs": "^4.6.6",
